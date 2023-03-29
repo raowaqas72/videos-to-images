@@ -3,7 +3,7 @@ from pyspark import SparkContext
 import cv2
 import os
 from pyspark import SparkConf
-
+import numpy as np
 conf = SparkConf().set("spark.driver.bindAddress", "127.0.0.1").set("spark.driver.port", "4042")
 print(conf)
 def extract_frames(filename):
@@ -21,14 +21,22 @@ def extract_frames(filename):
         while True:
             # Read next frame
             ret, frame = video_capture.read()
-            
+            gray1 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # Check if frame was successfully read
             if not ret:
+                print("exited")
                 break
-            
-            # Save frame as image file in folder
-            frame_name = os.path.join(folder_name, f"frame_{frame_count:04d}.jpg")
-            cv2.imwrite(frame_name, frame)
+            try:
+                array1 = np.array(gray1)
+                array2 = np.array(gray2)
+                # Save frame as image file in folder
+                mse = np.mean((array1 - array2) ** 2)
+                if mse>10:
+                    frame_name = os.path.join(folder_name, f"frame_{frame_count:04d}.jpg")
+                    cv2.imwrite(frame_name, frame)
+            except:pass
+            img2=frame
+            gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
             frame_count += 1
         
         # Release video capture
